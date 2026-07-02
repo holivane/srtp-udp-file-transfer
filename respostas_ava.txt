@@ -1,61 +1,61 @@
-Estudo Guiado 01 - Criacao de Protocolos
-Transferencia de Arquivos Confiavel sobre UDP
+Estudo Guiado 01 - Criação de Protocolos
+Transferência de Arquivos Confiável sobre UDP
 
 Integrantes:
-- Arthur Rebouças do Carmo | Matrícula: 
-- Holivane Pessoa Holanda Cabrini | Matrícula: 
-- Rodrigo | Matrícula: 
-- [preencher nome 4 ]
+- Arthur
+- Holivane
+- Rodrigo
+- Adicionar
 
 
-SECAO 0 / PESQUISA INICIAL
+SEÇÃO 0 / PESQUISA INICIAL
 
-1. Qual e o tamanho maximo seguro que um pacote UDP pode ter para transitar pela internet sem sofrer fragmentacao?
+1. Qual é o tamanho máximo seguro que um pacote UDP pode ter para transitar pela internet sem sofrer fragmentação?
 
-Para trafegar pela internet sem fragmentacao, o tamanho seguro costuma ser limitado pelo MTU mais comum, que e 1500 bytes em redes Ethernet. Depois de descontar os cabecalhos de IP e UDP, sobra menos espaco para dados da aplicacao. Como o IPv4 tem cabecalho minimo de 20 bytes e o UDP tem 8 bytes, o payload UDP ficaria em torno de 1472 bytes. Mesmo assim, para ser mais conservador e evitar problemas em caminhos com MTU menor, a pratica adotou payload de 1024 bytes.
+Para trafegar pela internet sem fragmentação, o tamanho seguro costuma ser limitado pelo MTU mais comum, que é 1500 bytes em redes Ethernet. Depois de descontar os cabeçalhos de IP e UDP, sobra menos espaço para dados da aplicação. Como o IPv4 tem cabeçalho mínimo de 20 bytes e o UDP tem 8 bytes, o payload UDP ficaria em torno de 1472 bytes. Mesmo assim, para ser mais conservador e evitar problemas em caminhos com MTU menor, a prática adotou payload de 1024 bytes.
 
-Isso e necessario porque a fragmentacao aumenta o risco de perda: se um fragmento se perde, o datagrama inteiro fica inutilizavel. No codigo, por isso, cada pedaco lido do arquivo tem no maximo 1024 bytes, e o cabecalho SRTP de 9 bytes e anexado a esse payload.
+Isso é necessário porque a fragmentação aumenta o risco de perda: se um fragmento se perde, o datagrama inteiro fica inutilizável. No código, por isso, cada pedaço lido do arquivo tem no máximo 1024 bytes, e o cabeçalho SRTP de 9 bytes é anexado a esse payload.
 
 
-2. O que e Stop-and-Wait? Como funciona quando um pacote e perdido?
+2. O que é Stop-and-Wait? Como funciona quando um pacote é perdido?
 
-Stop-and-Wait e uma tecnica de controle de confiabilidade em que o emissor envia um pacote e para, aguardando a confirmacao ACK daquele pacote antes de enviar o proximo. Se o ACK nao chegar dentro do tempo limite, o emissor entende que houve perda do pacote ou da confirmacao e retransmite o mesmo pacote.
+Stop-and-Wait é uma técnica de controle de confiabilidade em que o emissor envia um pacote e para, aguardando a confirmação ACK daquele pacote antes de enviar o próximo. Se o ACK não chegar dentro do tempo limite, o emissor entende que houve perda do pacote ou da confirmação e retransmite o mesmo pacote.
 
 Diagrama textual da perda:
 
 Cliente envia Seq=5 para Servidor.
 O pacote Seq=5 se perde na rede.
-Servidor nao recebe Seq=5 e, portanto, nao envia ACK.
-Cliente espera ate ocorrer timeout.
+Servidor não recebe Seq=5 e, portanto, não envia ACK.
+Cliente espera até ocorrer timeout.
 Cliente retransmite Seq=5.
 Servidor recebe Seq=5, grava o payload e envia ACK=5.
 Cliente recebe ACK=5 e passa para Seq=6.
 
 
-3. Qual e a ordem de bytes padrao da rede?
+3. Qual é a ordem de bytes padrão da rede?
 
-A ordem de bytes padrao para transmissao em rede e chamada Network Byte Order. Ela usa Big-Endian, ou seja, o byte mais significativo vem primeiro. No Python, usamos o caractere "!" no struct.pack e no struct.unpack para indicar essa ordem padrao de rede.
-
-
-4. Quando e melhor usar base64 e quando e melhor usar struct.pack?
-
-Base64 e melhor quando dados binarios precisam passar por ambientes que esperam texto, como JSON, XML, e-mail, campos de formulario ou algumas APIs HTTP. A desvantagem e que ele aumenta o tamanho dos dados, geralmente em cerca de 33%.
-
-struct.pack e melhor quando precisamos montar dados binarios compactos e bem definidos, como cabecalhos de protocolos, numeros inteiros, flags e campos de tamanho fixo. Nesta pratica, ele e mais adequado porque o protocolo precisa enviar Seq Num, Trans ID e Flag em formato binario eficiente.
+A ordem de bytes padrão para transmissão em rede é chamada Network Byte Order. Ela usa Big-Endian, ou seja, o byte mais significativo vem primeiro. No Python, usamos o caractere "!" no struct.pack e no struct.unpack para indicar essa ordem padrão de rede.
 
 
-5. Por que nao devemos salvar um arquivo com o nome struct.py?
+4. Quando é melhor usar base64 e quando é melhor usar struct.pack?
 
-Porque struct ja e o nome de uma biblioteca padrao do Python. Se criarmos um arquivo local chamado struct.py, o Python pode tentar importar esse arquivo local em vez da biblioteca oficial, causando erro ou comportamento inesperado.
+Base64 é melhor quando dados binários precisam passar por ambientes que esperam texto, como JSON, XML, e-mail, campos de formulário ou algumas APIs HTTP. A desvantagem é que ele aumenta o tamanho dos dados, geralmente em cerca de 33%.
+
+struct.pack é melhor quando precisamos montar dados binários compactos e bem definidos, como cabeçalhos de protocolos, números inteiros, flags e campos de tamanho fixo. Nesta prática, ele é mais adequado porque o protocolo precisa enviar Seq Num, Trans ID e Flag em formato binário eficiente.
 
 
-QUESTOES PARA ANALISE
+5. Por que não devemos salvar um arquivo com o nome struct.py?
 
-1. Qual taxa de transferencia efetiva foi notada?
+Porque struct já é o nome de uma biblioteca padrão do Python. Se criarmos um arquivo local chamado struct.py, o Python pode tentar importar esse arquivo local em vez da biblioteca oficial, causando erro ou comportamento inesperado.
 
-Nos testes locais, a taxa efetiva variou conforme o tamanho do arquivo e conforme a perda simulada. Sem simulacao de perda, arquivos pequenos apresentaram taxa menor por causa do custo fixo de abrir arquivo, montar pacotes, aguardar ACK e finalizar a transferencia. Arquivos maiores tendem a estabilizar melhor a taxa, mas o Stop-and-Wait continua limitado porque o cliente so envia o proximo pacote depois de receber ACK do pacote anterior.
 
-Com perda simulada de 30%, a taxa caiu bastante, porque varios pacotes ou ACKs precisaram ser retransmitidos. A taxa foi calculada no cliente usando:
+QUESTÕES PARA ANÁLISE
+
+1. Qual taxa de transferência efetiva foi notada?
+
+Nos testes locais, a taxa efetiva variou conforme o tamanho do arquivo e conforme a perda simulada. Sem simulação de perda, arquivos pequenos apresentaram taxa menor por causa do custo fixo de abrir arquivo, montar pacotes, aguardar ACK e finalizar a transferência. Arquivos maiores tendem a estabilizar melhor a taxa, mas o Stop-and-Wait continua limitado porque o cliente só envia o próximo pacote depois de receber ACK do pacote anterior.
+
+Com perda simulada de 30%, a taxa caiu bastante, porque vários pacotes ou ACKs precisaram ser retransmitidos. A taxa foi calculada no cliente usando:
 
 taxa Mbps = (bytes_confirmados * 8) / tempo_em_segundos / 1.000.000
 
@@ -64,28 +64,28 @@ Esse resultado mostra que a confiabilidade foi obtida, mas com custo de desempen
 
 2. Por que precisamos lidar com pacotes duplicados no servidor?
 
-Precisamos lidar com duplicados porque, no UDP, nao existe garantia automatica de entrega, ordem ou eliminacao de repeticoes. Mesmo que o servidor receba e grave um pacote corretamente, o ACK enviado ao cliente pode se perder. Nesse caso, o cliente nao tem como saber que o servidor ja recebeu o pacote. Ao ocorrer timeout, ele retransmite o mesmo Seq Num.
+Precisamos lidar com duplicados porque, no UDP, não existe garantia automática de entrega, ordem ou eliminação de repetições. Mesmo que o servidor receba e grave um pacote corretamente, o ACK enviado ao cliente pode se perder. Nesse caso, o cliente não tem como saber que o servidor já recebeu o pacote. Ao ocorrer timeout, ele retransmite o mesmo Seq Num.
 
-Exemplo: o cliente envia SeqNum=5. O servidor recebe, grava no arquivo e envia ACK=5. Se esse ACK se perde, o cliente aguarda ate o timeout e reenviar SeqNum=5. O servidor entao precisa reconhecer que SeqNum=5 e duplicado, reenviar o ACK e nao gravar o payload novamente, pois isso corromperia o arquivo.
-
-
-3. Qual tecnica substituiria Stop-and-Wait para melhorar a velocidade?
-
-Uma tecnica melhor seria a Janela Deslizante, ou Sliding Window. Nela, o emissor pode enviar varios pacotes em sequencia antes de esperar os ACKs, ate o limite de uma janela configurada. Conforme os ACKs chegam, a janela avanca e novos pacotes podem ser enviados.
-
-Isso melhora o desempenho porque aproveita melhor a rede e reduz o tempo parado esperando confirmacao pacote por pacote. Protocolos mais eficientes usam variacoes dessa ideia, como Go-Back-N ou Selective Repeat. No Selective Repeat, por exemplo, apenas os pacotes realmente perdidos precisam ser reenviados, tornando o processo mais eficiente que retransmitir uma sequencia inteira.
+Exemplo: o cliente envia SeqNum=5. O servidor recebe, grava no arquivo e envia ACK=5. Se esse ACK se perde, o cliente aguarda até o timeout e reenvia SeqNum=5. O servidor então precisa reconhecer que SeqNum=5 é duplicado, reenviar o ACK e não gravar o payload novamente, pois isso corromperia o arquivo.
 
 
-OBSERVACOES SOBRE A IMPLEMENTACAO
+3. Qual técnica substituiria Stop-and-Wait para melhorar a velocidade?
 
-O protocolo implementado usa cabecalho de 9 bytes no formato !IIB:
+Uma técnica melhor seria a Janela Deslizante, ou Sliding Window. Nela, o emissor pode enviar vários pacotes em sequência antes de esperar os ACKs, até o limite de uma janela configurada. Conforme os ACKs chegam, a janela avança e novos pacotes podem ser enviados.
+
+Isso melhora o desempenho porque aproveita melhor a rede e reduz o tempo parado esperando confirmação pacote por pacote. Protocolos mais eficientes usam variações dessa ideia, como Go-Back-N ou Selective Repeat. No Selective Repeat, por exemplo, apenas os pacotes realmente perdidos precisam ser reenviados, tornando o processo mais eficiente que retransmitir uma sequência inteira.
+
+
+OBSERVAÇÕES SOBRE A IMPLEMENTAÇÃO
+
+O protocolo implementado usa cabeçalho de 9 bytes no formato !IIB:
 - Seq Num: 4 bytes
 - Trans ID: 4 bytes
 - Flag: 1 byte
-- Payload: ate 1024 bytes
+- Payload: até 1024 bytes
 
-O cliente envia um pacote e aguarda o ACK correspondente. Se houver timeout, retransmite o mesmo pacote ate o limite de tentativas.
+O cliente envia um pacote e aguarda o ACK correspondente. Se houver timeout, retransmite o mesmo pacote até o limite de tentativas.
 
-O servidor grava apenas o pacote esperado. Se receber pacote duplicado, reenviar o ACK sem gravar novamente.
+O servidor grava apenas o pacote esperado. Se receber pacote duplicado, reenvia o ACK sem gravar novamente.
 
-Se a transferencia parar no meio e o servidor ficar mais de 10 segundos sem receber o proximo pacote, ele aborta a transacao e remove o arquivo incompleto com os.remove().
+Se a transferência parar no meio e o servidor ficar mais de 10 segundos sem receber o próximo pacote, ele aborta a transação e remove o arquivo incompleto com os.remove().
