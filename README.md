@@ -2,6 +2,8 @@
 
 Entrega da pratica "Criacao de Protocolos: Transferencia de Arquivos Confiavel sobre UDP".
 
+SRTP significa Simple Reliable Transfer Protocol: um protocolo proprio, definido para esta atividade, que garante entrega confiavel de arquivos sobre UDP por meio de numero de sequencia, ACK, timeout e retransmissao.
+
 ## Arquivos
 
 - `cliente.py`: emissor do arquivo usando UDP com Stop-and-Wait.
